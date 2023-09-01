@@ -6,6 +6,7 @@ namespace Identity.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+
 [Authorize(AuthenticationSchemes = "Bearer")]
 public abstract class ApiControllerBase : ControllerBase
 {

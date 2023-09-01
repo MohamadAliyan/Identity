@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using System.Data;
 
 namespace Identity.Controllers;
 
@@ -42,12 +43,13 @@ public class AccountController : ApiControllerBase
         }
         var user = _mapper.Map<ApplicationUser>(userModel);
         var result = await _userManager.CreateAsync(user, userModel.Password);
+        var tk =  await _userManager.GenerateEmailConfirmationTokenAsync(user);
         if (!result.Succeeded)
         {
           
             return BadRequest(result.Errors);
         }
-        return Ok();
+        return Ok(tk);
         
 
     }
@@ -56,6 +58,7 @@ public class AccountController : ApiControllerBase
     [HttpPost("AddUserRole")]
     public async Task<IActionResult> AddUserRole(UserRoleModel userRoleModel)
     {
+        
         var user =await _userManager.FindByIdAsync(userRoleModel.UserId);
         var role = await _roleManager.FindByIdAsync(userRoleModel.RoleId);
         if (user != null && role != null)
@@ -70,8 +73,10 @@ public class AccountController : ApiControllerBase
 
 
     [HttpPost("GetRoleByUserId")]
+    [HaveAccess("admin")]
     public async Task<IActionResult> GetRoleByUserId(string userId)
     {
+        var dd=CurrentUserId;
         var user = await _userManager.FindByIdAsync(userId);
         var res = await _userManager.GetRolesAsync(user);
         return Ok(res);
@@ -101,6 +106,15 @@ public class AccountController : ApiControllerBase
                 new Claim("UserId", user.Id.ToString()),
                 new Claim("FullName", $"{user.Name} {user.Family}")
             };
+
+            var role = _userManager.GetRolesAsync(user).Result;
+            if (role != null && role.Count > 0)
+            {
+                foreach (var item in role)
+                {
+                    authClaims.Add(new Claim(ClaimTypes.Role, item));
+                }
+            }
             var token = GetToken(authClaims);
 
             var tk = new JwtSecurityTokenHandler().WriteToken(token);
@@ -126,13 +140,24 @@ public class AccountController : ApiControllerBase
     }
 
 
-    //[HttpPost("GetToken")]
+    [AllowAnonymous]
+    [HttpPost("CofirmEmail")]
+    public async Task<IActionResult> CofirmEmail( ConfirmEmailModel model)
+    {
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user is null)
+        {
+            return BadRequest("User not Found");
+        }
+        var res = await _userManager.ConfirmEmailAsync(user,model.Token);
+        if (!res.Succeeded)
+        {
+            return BadRequest("Invalid Token");
+        }
 
-    //public async Task<IActionResult> Logout()
-    //{
-    //    await _signInManager.SignOutAsync();
-    //    return Ok("Exit");
-    //}
+        return Ok();
+
+    }
 
 }
 

@@ -51,6 +51,9 @@ public class Startup
 
         services.Configure<AppSettings>(configRoot);
 
+        services.AddMvc();
+        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
         services.Configure<IdentityOptions>(options =>
         {
             // Password settings

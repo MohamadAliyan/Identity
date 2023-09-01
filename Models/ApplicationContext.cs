@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace Identity.Models
 {
@@ -9,11 +10,13 @@ namespace Identity.Models
             : base(options)
         {
         }
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+ 
+
+        protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(modelBuilder);
-            
+            base.OnModelCreating(builder); 
+            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
-        
+
     }
 }

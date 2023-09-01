@@ -22,9 +22,9 @@ public class RoleController : ApiControllerBase
     [HttpPost("RegisterRole")]
         public async Task<IActionResult> RegisterRole(RoleRegistrationModel roleModel)
         {
-            var user = _mapper.Map<ApplicationRole>(roleModel);
+            var role = _mapper.Map<ApplicationRole>(roleModel);
 
-            var result = await _roleManager.CreateAsync(user);
+            var result = await _roleManager.CreateAsync(role);
             if (!result.Succeeded)
             {
                 return BadRequest("خطا");
