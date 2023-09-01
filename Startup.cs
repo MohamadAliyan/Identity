@@ -141,6 +141,8 @@ public class Startup
                         .AllowAnyMethod();
                 });
         });
+         services.AddHttpClient();
+         
 
     }
     public void Configure(WebApplication app, IWebHostEnvironment env)

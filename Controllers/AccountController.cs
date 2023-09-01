@@ -22,18 +22,20 @@ public class AccountController : ApiControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly IOptionsSnapshot<AppSettings> _settings;
-
+    private readonly IHttpClientFactory _httpClientFactory;
 
 
     public AccountController(IMapper mapper,
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
-        IOptionsSnapshot<AppSettings> settings)
+        IOptionsSnapshot<AppSettings> settings,
+        IHttpClientFactory httpClientFactory)
     {
         _mapper = mapper;
         _userManager = userManager;
         _roleManager = roleManager;
         _settings = settings;
+        _httpClientFactory = httpClientFactory;
     }
 
     [HttpPost("RegisterUser")]
@@ -170,14 +172,33 @@ public class AccountController : ApiControllerBase
         var d = GetListProducts();
         return Ok(d);
     }
+    [AllowAnonymous]
+    [HttpGet("GetUsers")]
+    public async Task<IActionResult> GetUsers()
+    {
 
+        var d = await GetListUsersAsync();
+        return Ok(d);
+    }
     public class ProductModel
     {
         public int id { get; set; }
         public string title { get; set; }
         public decimal price { get; set; }
     }
+    public class UserModel
+    {
+        public int id { get; set; }
+        public string email { get; set; }
+        public string username { get; set; }
+        // public FLModel name { get; set; }
+    }
+    public class FLModel
+    {
 
+        public string firstname { get; set; }
+        public string lastname { get; set; }
+    }
     private List<ProductModel> GetListProducts()
     {
         using var client = new HttpClient();
@@ -186,6 +207,21 @@ public class AccountController : ApiControllerBase
         return response;
 
     }
+    private async Task<List<UserModel>> GetListUsersAsync()
+    {
 
+
+        var httpClient = _httpClientFactory.CreateClient();
+        using var response = await httpClient.GetAsync("https://fakestoreapi.com/users", HttpCompletionOption.ResponseHeadersRead);
+
+        response.EnsureSuccessStatusCode();
+        var stream = await response.Content.ReadAsStreamAsync();
+        var users = await JsonSerializer.DeserializeAsync<List<UserModel>>(stream);
+        return users;
+
+
+
+
+    }
 }
 
